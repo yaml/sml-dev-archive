@@ -1,0 +1,16 @@
+#!/bin/sh
+
+curl -sL https://archive.org/download/yahoo-groups-2016-06-18T17-13-11Z-9329be/sml-dev.sbxL0kc.warc.gz |
+  zcat |
+  grep '^\{' |
+  jq -c 'select(.rawEmail)' |
+  jq -r .rawEmail |
+  perl -MHTML::Entities -pe '
+    s/\r//;
+    decode_entities $_;
+    /^([-\w]+): \S/;
+    undef $_
+      if $1 and
+         $1 !~ /^(From|Subject|Date|In-Reply-To)$/ or
+         /^ <mailto:/
+  '
